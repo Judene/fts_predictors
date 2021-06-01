@@ -29,7 +29,7 @@ import os
 import sklearn.preprocessing
 from sklearn.metrics import r2_score
 
-from tensorflow.keras.layers import Dense,Dropout,SimpleRNN,LSTM
+from tensorflow.keras.layers import Dense, Dropout, SimpleRNN, LSTM
 from tensorflow.keras.models import Sequential
 
 
