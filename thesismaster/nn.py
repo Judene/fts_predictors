@@ -14,11 +14,11 @@ import matplotlib.pylab as plt
 plt.rcParams["figure.figsize"] = (20, 10)
 plt.style.use("ggplot")
 
-import statsmodels
-import statsmodels.api as sm
-from matplotlib import pyplot
-from statsmodels.tsa.stattools import adfuller
-from pandas.plotting import lag_plot
+# import statsmodels
+# import statsmodels.api as sm
+# from matplotlib import pyplot
+# from statsmodels.tsa.stattools import adfuller
+# from pandas.plotting import lag_plot
 
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
@@ -72,6 +72,7 @@ df_ex = exchange.copy()
 
 exchange = exchange.iloc[::-1]
 
+
 # =============================================================================
 # Manipulate the data
 # =============================================================================
@@ -79,12 +80,13 @@ exchange = exchange.iloc[::-1]
 # Function for min-max normalization of stock
 def normalize_data(exchange):
     min_max_scaler = sklearn.preprocessing.MinMaxScaler()
-    exchange["Open"] = min_max_scaler.fit_transform(exchange.Open.values.reshape(-1,1))
-    exchange["High"] = min_max_scaler.fit_transform(exchange.High.values.reshape(-1,1))
-    exchange["Low"] = min_max_scaler.fit_transform(exchange.Low.values.reshape(-1,1))
-    exchange["Price"] = min_max_scaler.fit_transform(exchange.Price.values.reshape(-1,1))
-    #exchange["Change"] = min_max_scaler.fit_transform(exchange.Change.values.reshape(-1,1))
+    exchange["Open"] = min_max_scaler.fit_transform(exchange.Open.values.reshape(-1, 1))
+    exchange["High"] = min_max_scaler.fit_transform(exchange.High.values.reshape(-1, 1))
+    exchange["Low"] = min_max_scaler.fit_transform(exchange.Low.values.reshape(-1, 1))
+    exchange["Price"] = min_max_scaler.fit_transform(exchange.Price.values.reshape(-1, 1))
+    # exchange["Change"] = min_max_scaler.fit_transform(exchange.Change.values.reshape(-1,1))
     return exchange
+
 
 exchange_norm = normalize_data(exchange)
 exchange_norm.shape
@@ -127,13 +129,13 @@ def load_data(stock, seq_len):
 
     return [x_train, y_train, X_test, y_test]
 
+
 x_train, y_train, X_test, y_test = load_data(stock, seq_len)
-    
-print("x_train.shape = ",x_train.shape)
+
+print("x_train.shape = ", x_train.shape)
 print("y_train.shape = ", y_train.shape)
 print("X_test.shape = ", X_test.shape)
-print("y_test.shape = ",y_test.shape)
-
+print("y_test.shape = ", y_test.shape)
 
 # =============================================================================
 # Simple RNN model
@@ -141,89 +143,87 @@ print("y_test.shape = ",y_test.shape)
 
 rnn_model = Sequential()
 
-rnn_model.add(SimpleRNN(50,activation="relu",return_sequences=True, input_shape=(x_train.shape[1],3)))
+rnn_model.add(SimpleRNN(50, activation="relu", return_sequences=True, input_shape=(x_train.shape[1], 3)))
 rnn_model.add(Dropout(0.15))
 
-rnn_model.add(SimpleRNN(50,activation="relu",return_sequences=True))
+rnn_model.add(SimpleRNN(50, activation="relu", return_sequences=True))
 rnn_model.add(Dropout(0.15))
 
-rnn_model.add(SimpleRNN(50,activation="relu",return_sequences=False))
+rnn_model.add(SimpleRNN(50, activation="relu", return_sequences=False))
 rnn_model.add(Dropout(0.15))
 
 rnn_model.add(Dense(1))
 
 rnn_model.summary()
 
-
 # =============================================================================
 # Run the model
 # =============================================================================
-rnn_model.compile(optimizer="adam",loss="MSE")
+rnn_model.compile(optimizer="adam", loss="MSE")
 rnn_model.fit(x_train, y_train, epochs=10, batch_size=20)
 
 rnn_predictions = rnn_model.predict(X_test)
 
-rnn_score = r2_score(y_test,rnn_predictions)
-print("R2 Score of RNN model = ",rnn_score)
+rnn_score = r2_score(y_test, rnn_predictions)
+print("R2 Score of RNN model = ", rnn_score)
 
-MSE = mean_squared_error(y_true = y_test, y_pred = rnn_predictions)
-print("MSE Score of RNN model = ",MSE)
+MSE = mean_squared_error(y_true=y_test, y_pred=rnn_predictions)
+print("MSE Score of RNN model = ", MSE)
 
 # =============================================================================
 # Plot the model
 # =============================================================================
 from sklearn.preprocessing import MinMaxScaler
 
-std_y = MinMaxScaler(feature_range=(-1,1))
-finalPred= std_y.inverse_transform(rnn_predictions)
+std_y = MinMaxScaler(feature_range=(-1, 1))
+finalPred = std_y.inverse_transform(rnn_predictions)
 aactualy = std_y.inverse_transform(y_test)
 
 from general_func import exploration, stationaryExploration, ADF_test, pricePrediction, reportPerformance
 
-pricePrediction(y_test,rnn_predictions)
+pricePrediction(y_test, rnn_predictions)
 
 # =============================================================================
 # LSTM
 # =============================================================================
 regressor = Sequential()
 
-regressor.add(LSTM(units = 50, return_sequences = True, input_shape = (x_train.shape[1], 3)))
+regressor.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 3)))
 regressor.add(Dropout(0.2))
 
-regressor.add(LSTM(units = 50, return_sequences = True))
+regressor.add(LSTM(units=50, return_sequences=True))
 regressor.add(Dropout(0.25))
 
-regressor.add(LSTM(units = 50, return_sequences = True))
+regressor.add(LSTM(units=50, return_sequences=True))
 regressor.add(Dropout(0.25))
 
-regressor.add(LSTM(units = 50))
+regressor.add(LSTM(units=50))
 regressor.add(Dropout(0.25))
 
-regressor.add(Dense(units = 1))
+regressor.add(Dense(units=1))
 
 regressor.summary()
 
-regressor.compile(optimizer = "adam", loss = "mean_squared_error")
+regressor.compile(optimizer="adam", loss="mean_squared_error")
 
 regressor.fit(x_train, y_train, epochs=10, batch_size=20)
 lstm_predictions = regressor.predict(X_test)
 
-rnn_score = r2_score(y_test,lstm_predictions)
-print("R2 Score of RNN model = ",rnn_score)
+rnn_score = r2_score(y_test, lstm_predictions)
+print("R2 Score of RNN model = ", rnn_score)
 
-MSE = mean_squared_error(y_true = y_test, y_pred = lstm_predictions)
-print("MSE Score of RNN model = ",MSE)
+MSE = mean_squared_error(y_true=y_test, y_pred=lstm_predictions)
+print("MSE Score of RNN model = ", MSE)
 
 # =============================================================================
 # Plot the model
 # =============================================================================
 from sklearn.preprocessing import MinMaxScaler
 
-std_y = MinMaxScaler(feature_range=(-1,1))
-finalPred= std_y.inverse_transform(rnn_predictions)
+std_y = MinMaxScaler(feature_range=(-1, 1))
+finalPred = std_y.inverse_transform(rnn_predictions)
 aactualy = std_y.inverse_transform(y_test)
 
 from general_func import exploration, stationaryExploration, ADF_test, pricePrediction, reportPerformance
 
-pricePrediction(y_test,lstm_predictions)
-
+pricePrediction(y_test, lstm_predictions)
