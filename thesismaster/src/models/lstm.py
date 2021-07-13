@@ -56,24 +56,7 @@ class LSTMNetwork:
         self.optimizer = Adam(lr=self.learning_rate)
 
         # --------------------------------------------------------------------------------
-        
-# =============================================================================
-#         early_stop = EarlyStopping(monitor='loss', patience=1, verbose=1)
-# input1 = Input(shape=(1,2)) # for the three columns of dat_train
-# x1 = LSTM(6)(input1)
-# 
-# x3 = Dropout(0.3)(x1)
-# output = Dense(1, activation='sigmoid')(x3)
-# 
-# 
-# n_net = Model(inputs=[input1], outputs=output)
-# 
-# n_net.summary()
-# n_net.compile(loss='mean_squared_error', optimizer='adam')
-# model.fit(x_train, y_train,
-#           epochs=100, batch_size=1, verbose=1,
-#           callbacks=[early_stop])
-# =============================================================================
+
 
         # Create the input
         input = [
@@ -186,25 +169,24 @@ class LSTMNetwork:
         print("SCORE: ", score)
         return test_loss, test_accuracy
 
-# =============================================================================
-#     def save(self):
-#         project_dir = Path(__file__).resolve().parents[2]
-#         models_dir = str(project_dir) + '/models/' + self.name + '/'
-#         utils.check_folder(models_dir)
-#         self.model.save(models_dir + self.name + ".h5")
-#         print("Saved model to disk")
-# 
-#     def load(self):
-#         try:
-#             project_dir = Path(__file__).resolve().parents[2]
-#             models_dir = str(project_dir) + '/models/' + self.name + '/'
-#             utils.check_folder(models_dir)
-#             self.model = load_model(models_dir + self.name + ".h5")
-#             print("Loaded " + self.name + " model from disk")
-# 
-#         except ValueError as e:
-#             print("No saved model found. Check file name or train from scratch")
-# =============================================================================
+     def save(self):
+         project_dir = Path(__file__).resolve().parents[2]
+         models_dir = str(project_dir) + '/models/' + self.name + '/'
+         utils.check_folder(models_dir)
+         self.model.save(models_dir + self.name + ".h5")
+         print("Saved model to disk")
+ 
+     def load(self):
+         try:
+             project_dir = Path(__file__).resolve().parents[2]
+             models_dir = str(project_dir) + '/models/' + self.name + '/'
+             utils.check_folder(models_dir)
+             self.model = load_model(models_dir + self.name + ".h5")
+             print("Loaded " + self.name + " model from disk")
+ 
+         except ValueError as e:
+             print("No saved model found. Check file name or train from scratch")
+
 
     def predict(self, x: np.ndarray) -> np.ndarray:
         prediction = self.model.predict(x)
