@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 
-from rnn_code import RecurrentNeuralNetwork
+from src.models.rnn import RecurrentNeuralNetwork
 
 # =====================================================================================================================
 # FUNCTIONS
