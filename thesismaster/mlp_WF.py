@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 import os
 
-from mlp_code import MultiLayerPerceptron
+from src.models.mlp import MultiLayerPerceptron
 from sklearn.preprocessing import MinMaxScaler
 
 
