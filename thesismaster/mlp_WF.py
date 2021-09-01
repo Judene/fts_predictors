@@ -267,7 +267,7 @@ if __name__ == "__main__":
     
     mlp_model = MultiLayerPerceptron(
         name="mlp_gold_wf",
-        num_inputs=1,
+        num_inputs=2,
         num_outputs=1,
         # If true, training info is outputted to stdout
         keras_verbose=False,
