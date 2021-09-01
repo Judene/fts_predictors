@@ -11,7 +11,7 @@ from sklearn.preprocessing import MinMaxScaler
 class WalkForwardMLPPredictor:
 
     def __init__(self, model, start_date="2000-01-03", end_date="2020-10-13", input_pct_change=1,
-                 output_pct_change=1, window_size=252, frequency=7, prediction_length=20,
+                 output_pct_change=1, window_size=252, frequency=7, prediction_length=10,
                  validation_size=10, sliding_window=True, random_validation=False):
         """
         TODO: Update description
@@ -89,13 +89,17 @@ class WalkForwardMLPPredictor:
         input_data = input_data[self.start_date:self.end_date]
         output_data = output_data[self.start_date:self.end_date]
 
+        # We need to make out data stationary
+        input_data = input_data.pct_change(periods=self.input_pct_change)
+        output_data = output_data.pct_change(periods=self.output_pct_change)
+
         # Fix INFs
         input_data[np.isinf(input_data)] = 0.0
         input_data[np.isinf(input_data)] = 0.0
 
         # Initialise our result DataFrames
         predictions = pd.DataFrame(index=input_data.index, columns=["predictions"])
-        #val_score = pd.DataFrame(index=input_data.index, columns=["val_score"])
+        # val_score = pd.DataFrame(index=input_data.index, columns=["val_score"])
         step_size = 0
         t_model = None
 
@@ -145,8 +149,6 @@ class WalkForwardMLPPredictor:
                     t_model.train(x_train, y_train, x_validation, y_validation, load_model=False)
 
                 pred = t_model.predict(x_test)
-                #pred = scaler2.inverse_transform(pred)
-                #pred = np.array(pred).ravel()
 
                 if len(pred) == 1:
                     predictions.loc[curr_t, "predictions"] = np.squeeze(pred)
@@ -157,9 +159,6 @@ class WalkForwardMLPPredictor:
 
             else:
                 pred = t_model.predict(x_test)
-                #pred = scaler2.inverse_transform(pred)
-                #pred = np.array(pred).ravel()
-                
                 if len(pred) == 1:
                     predictions.loc[curr_t, "predictions"] = np.squeeze(pred)
                 else:
@@ -170,27 +169,20 @@ class WalkForwardMLPPredictor:
             # Adjust for sliding window
             if self.sliding_window:
                 step_size += 1
-                
-        
+
         error = pd.DataFrame(
             np.squeeze(predictions.shift(self.prediction_length).values) - np.squeeze(output_data.values),
             index=predictions.index, columns=["error"])
-        
-        output_data = scaler2.inverse_transform(output_data)
-        output_data = pd.DataFrame(output_data, columns=['TRUE'])
-        predictions = scaler2.inverse_transform(predictions)
-        predictions = pd.DataFrame(predictions, columns=['PRED'])
-        
         
         # Create dataframe for predicted values
         pred_df = pd.DataFrame(np.column_stack([np.squeeze(predictions), np.squeeze(output_data)]))
         pred_df.columns = ["PRED", "TRUE"]
         pred_df.to_csv('C:/Users/ELNA SIMONIS/Documents/Results/TESTING.csv')
 
+
         return predictions, error
 
 # ======================================================================================================================
-
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     """
     Frame a time series as a supervised learning dataset.
@@ -229,9 +221,9 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     return agg
 
 
+
+
 if __name__ == "__main__":
-    
-    
     # Get gold data
     gold_etf_data = pd.read_csv(r'C:\Users\ELNA SIMONIS\Documents\MEng\2021\Data\EditedData\Bond.csv')
     gold_etf_data = gold_etf_data.ffill().dropna()
@@ -242,37 +234,28 @@ if __name__ == "__main__":
     datum = gold_etf_data["Date"]
     gold_etf_data = gold_etf_data.set_index('Date')
     
-    gold_etf_data = gold_etf_data.pct_change()
-    
-    scaler2 = MinMaxScaler(feature_range=(-1, 1))
-    transform = scaler2.fit_transform(gold_etf_data)
-    gold_etf_data['Transform'] = transform
-    
-    Transform = gold_etf_data.drop(['Price'], axis = 1)
-    gold_etf_data = gold_etf_data.drop(['Transform'], axis = 1)
-    
-    # Set number of features
     n_features = 2
-    # Create supervised learning problem
-    # Create supervised learning problem
-    Transform = series_to_supervised(Transform.values, n_in=n_features, n_out=1)
+    #gold_etf_data = gold_etf_data.pct_change()
+    gold_etf_data = series_to_supervised(gold_etf_data.values, n_in=n_features, n_out=1)
+    input_data = gold_etf_data.drop(['var1(t)'], axis = 1)
+    output_data = gold_etf_data.drop(['var1(t-2)', 'var1(t-1)'], axis = 1)
+    
+    output_data['Date'] = datum[1:]
+    output_data = output_data.set_index('Date')
+    input_data['Date'] = datum[1:]
+    input_data = input_data.set_index('Date')
+    
+    input_data.shape
 
-    Transform['Date'] = datum[1:]
-    Transform = Transform.set_index('Date')
-    
-    input_data = Transform.drop(['var1(t)'], axis = 1)
-    output_data = Transform.drop(['var1(t-2)', 'var1(t-1)'], axis = 1)
-    
-    output_data.dtypes
-    
+
     mlp_model = MultiLayerPerceptron(
         name="mlp_gold_wf",
-        num_inputs=2,
+        num_inputs=n_features,
         num_outputs=1,
         # If true, training info is outputted to stdout
         keras_verbose=False,
         # A summary of the NN is printed to stdout
-        print_model_summary=False,
+        print_model_summary=True,
         # ff_layers = [units, activation, regularization, dropout, use_bias]
         ff_layers=[
             [512, "relu", 0.0, 0.2, True, "gaussian"],
@@ -292,13 +275,11 @@ if __name__ == "__main__":
         # If this many stagnant epochs are seen, stop training
         stopping_patience=50
     )
-    
-
 
     # Initiate our model
-    wf_model = WalkForwardMLPPredictor(model=mlp_model, start_date="2018-01-02", end_date="2021-08-02",
+    wf_model = WalkForwardMLPPredictor(model=mlp_model, start_date="2019-01-01", end_date="2020-10-13",
                                        input_pct_change=1, output_pct_change=1, window_size=252, frequency=7,
-                                       prediction_length=20, validation_size=20, sliding_window=True,
+                                       prediction_length=10, validation_size=21, sliding_window=True,
                                        random_validation=False)
 
     # Train our model through time, and obtain the predictions and errors
@@ -336,20 +317,3 @@ if __name__ == "__main__":
     plt.xticks(fontsize=10)
     plt.show()
     plt.close()
-    
-    plt.figure(figsize=(7, 4))
-    plt.plot(figuur, color = 'blue')
-    plt.xlabel('Time', fontsize=10, fontweight='bold', color = 'black')
-    plt.ylabel('Close price change (%)', fontsize=10, fontweight='bold', color = 'black')
-    ax = plt.axes()
-    plt.yticks(fontsize=8)
-    plt.xticks(fontsize=8)
-    ax.legend()
-    ax.set_facecolor("white")
-    ax.tick_params(axis="x", colors="black")
-    ax.tick_params(axis="y", colors="black")
-    ax.spines['bottom'].set_color('black')
-    ax.spines['top'].set_color('black')
-    ax.spines['right'].set_color('black')
-    ax.spines['left'].set_color('black')
-    plt.show()
