@@ -5,10 +5,9 @@ After cloning the repository, create a virtual environment.
 A virtual environment creates a sandbox that does not affect the system Python.
 
 ```
-virtualenv ve -p `which python3.6`
-source ./ve/bin/activate
-pip install numpy
-pip install -r requirements.txt
+conda create -n yourenvname python=3.6 anaconda
+source activate yourenvname
+conda install -n yourenvname [package]
 ```
 ==============================
 
