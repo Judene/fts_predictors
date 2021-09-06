@@ -1,4 +1,6 @@
 # Judene Thesis
+This repository contains all the code for the Master's thesis, Identifying generic machine learning approaches for financial time series forecasting. An abstract of the thesis follows:
+
 A package for testing various time series predictors in a walk forward fashion
 
 # Installation on Anaconda
@@ -10,6 +12,8 @@ source activate yourenvname
 conda install -n yourenvname [package]
 ```
 ==============================
+
+Code was tested on Python 3.6 with TensorFlow version 1.10.0 and matplotlib version 2.1.0.
 
 A short description of the project.
 
