@@ -11,9 +11,9 @@ conda create -n yourenvname python=3.6 anaconda
 source activate yourenvname
 conda install -n yourenvname [package]
 ```
-==============================
-
 Code was tested on Python 3.6 with TensorFlow version 1.10.0 and matplotlib version 2.1.0.
+==============================
+Example n
 
 A short description of the project.
 
