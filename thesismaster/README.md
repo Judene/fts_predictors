@@ -1,10 +1,9 @@
 # Judene Thesis
 A package for testing various time series predictors in a walk forward fashion
 
+# Installation on Anaconda
 After cloning the repository, create a virtual environment.
 A virtual environment creates a sandbox that does not affect the system Python.
-
-## Create a virtual environemnt in Anaconda for Python
 ```
 conda create -n yourenvname python=3.6 anaconda
 source activate yourenvname
