@@ -1,9 +1,10 @@
 # Judene Thesis
 This repository contains all the code for the Master's thesis, Identifying generic machine learning approaches for financial time series forecasting. An abstract of the thesis follows:
 
-A package for testing various time series predictors in a walk forward fashion
+%A package for testing various time series predictors in a walk forward fashion
 
-# Installation on Anaconda
+Installation on Anaconda
+-------------------------
 After cloning the repository, create a virtual environment.
 A virtual environment creates a sandbox that does not affect the system Python.
 ```
