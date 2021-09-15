@@ -33,6 +33,7 @@ statsmodels==0.6.1
 tensorboard==1.9.0
 tensorflow-gpu==1.9.0
 termcolor==1.1.0
+torch==1.9.0
 typing-extensions==3.10.0.0
 virtualenv==16.0.0
 Werkzeug==2.0.1
