@@ -67,11 +67,11 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 n_features = 2
 
 # Get data path
-#data_path = "C:/Users/ELNA SIMONIS/Documents/MEng/2021/EditedData/Gold.csv"
+data_path = "//home//zander//projects//judene_thesis//Master_Thesis//thesismaster//data"
 
 # Get gold data
-gold_etf_data = pd.read_csv(r'C:\Users\ELNA SIMONIS\Documents\MEng\2021\Data\EditedData\USD_ZAR.csv', index_col=0)
-gold_etf_data = gold_etf_data.ffill().dropna()
+gold_etf_data = pd.read_csv(os.path.join(data_path, "local_etfs_close.csv"), index_col=0)
+gold_etf_data = gold_etf_data["GLD"].to_frame().ffill().dropna()
 
 # Make data stationary
 gold_etf_data = gold_etf_data.pct_change()
