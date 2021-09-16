@@ -30,8 +30,6 @@ cd fts_predictors
 virtualenv ve -p /usr/bin/python3.6
 ./ve/bin/pip install -r requirements/cpu.txt
 ```
-
-==============================
  
 Example notebooks
 -------------------
