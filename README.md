@@ -1,7 +1,13 @@
-# Judene Thesis
-This repository contains all the code for the Master's thesis, Identifying generic machine learning approaches for financial time series forecasting. An abstract of the thesis follows:
+# fts_predictors
+fts_predictors (_Financial Time Series Predictors_) contains standardized code for training ML models on financial time
+series. Models can either be trained _once-off_, or in a _walk-forward fashion_. Models included:
 
-%A package for testing various time series predictors in a walk forward fashion
+- [x] Linear Regression
+- [x] Multi-layered Perceptron
+- [x] GRU Neural Network
+- [x] ARIMA
+- [ ] Support Vector Regression
+- [ ] Transformer Network
 
 Installation on Anaconda
 -------------------------
@@ -12,36 +18,41 @@ conda create -n yourenvname python=3.6 anaconda
 source activate yourenvname
 conda install -n yourenvname [package]
 ```
+
+Installation on Ubuntu 20.04+
+-------------------------
+```
+apt-get update && apt-get install -y \
+    python3.6 python3-pip git-core openssh-client python3-virtualenv \
+    libssl-dev wget zlib1g-dev python3.6-tk
+git clone git@github.com:Judene/fts_predictors.git
+cd fts_predictors
+virtualenv ve -p /usr/bin/python3.6
+./ve/bin/pip install -r requirements/cpu.txt
+```
+
 ==============================
  
 Example notebooks
 -------------------
 To see how the code is used, please inspect the following notebooks:
 
-A short description of the project.
+- [ ] TODO: Add Notebooks!
+
 
 Project Organization
 ------------
 
     ├── README.md          <- The top-level README for developers using this project.
-    ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump.
-    │
-    ├── models             <- Trained and serialized models, model predictions, or model summaries
-    │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
-    │
+    ├── data               <- Data from third party sources.
+    ├── models             <- Trained and serialized models, model predictions, or model summaries.
+    ├── notebooks          <- Jupyter notebooks.
     ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
     │                         generated with `pip freeze > requirements.txt`
+    ├── scripts            <- Scripts to run various implementations of the models.
+    ├── src                <- Base model classes and various utils.
     │
     └── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
 
 
 --------
-
-<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
