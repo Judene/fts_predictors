@@ -31,7 +31,7 @@ virtualenv ve -p /usr/bin/python3.6
 ./ve/bin/pip install -r requirements/cpu.txt
 ```
  
-Example notebooks
+Example Notebooks
 -------------------
 To see how the code is used, please inspect the following notebooks:
 

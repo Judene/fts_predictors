@@ -13,7 +13,7 @@ import src.utils as utils
 
 class ARIMA:
     """
-    An implementation of a deep neural networks.
+    An implementation of an auto-ARIMA model
     """
     def __init__(self, name: str, num_inputs: int, num_outputs: int, *args, **kwargs):
         """
