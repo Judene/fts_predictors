@@ -28,7 +28,7 @@ apt-get update && apt-get install -y \
 git clone git@github.com:Judene/fts_predictors.git
 cd fts_predictors
 virtualenv ve -p /usr/bin/python3.6
-./ve/bin/pip install -r requirements/cpu.txt
+./ve/bin/pip install -r requirements.txt
 ```
  
 Example Notebooks
