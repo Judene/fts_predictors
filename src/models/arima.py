@@ -1,5 +1,6 @@
 import numpy as np
 from pathlib import Path
+import pickle
 from keras.callbacks import EarlyStopping
 from keras.layers import Dense, Dropout, Input, GaussianDropout
 from keras.models import load_model
@@ -8,6 +9,8 @@ from keras.optimizers import Adam
 from keras.regularizers import l2
 from keras.utils import plot_model
 
+from pmdarima.arima import auto_arima
+
 import src.utils as utils
 
 
@@ -15,105 +18,58 @@ class ARIMA:
     """
     An implementation of an auto-ARIMA model
     """
-    def __init__(self, name: str, num_inputs: int, num_outputs: int, *args, **kwargs):
+    def __init__(self, name: str, **kwargs):
         """
         :param name: the user specified name given for the neural network
         :param num_inputs: the number of inputs that goes into the model
         :param num_outputs: the number of possible classes
         """
         self.name = name
-        self.num_inputs = num_inputs
-        self.num_outputs = num_outputs
 
-        # If true, training info is outputted to stdout
-        self.keras_verbose = False
-        # A summary of the NN is printed to stdout
-        self.print_model_summary = False
-
-        # ff_layers = [units, activation, regularization, dropout, use_bias, dropout_type]
-        self.ff_layers = [
-            [512, "relu", 0.0, 0.2, True, "gaussian"],
-            [512, "relu", 0.0, 0.2, True, "gaussian"],
-            [512, "relu", 0.0, 0.2, True, "gaussian"]
-        ]
-
-        # The final output layer's activation function
-        self.final_activation = "tanh"
-        # The objective function for the NN
-        self.objective = "mse"
-        # The maximum number of epochs to run
-        self.epochs = 20
-        # The batch size to use in the NN
-        self.batch_size = 128
-        # The learning rate used in optimization
-        self.learning_rate = 0.001
-        # If this many stagnant epochs are seen, stop training
-        self.stopping_patience = 20
+        # Model parameters
+        self.start_p = 2
+        self.d = None
+        self.start_q = 2
+        self.max_p = 5
+        self.max_d = 2
+        self.max_q = 5
+        self.start_P = 1
+        self.D = None
+        self.start_Q = 1
+        self.max_P = 2
+        self.max_D = 1
+        self.max_Q = 2
+        self.max_order = 5
+        self.m = 1
+        self.seasonal = True
+        self.stationary = False
+        self.information_criterion = 'aic'
+        self.alpha = 0.05
+        self.test = 'kpss'
+        self.seasonal_test = 'ocsb'
+        self.stepwise = True
+        self.n_jobs = 1
+        self.start_params = None
+        self.trend = None
+        self.method = 'lbfgs'
+        self.maxiter = 50
+        self.offset_test_args = None
+        self.seasonal_test_args = None
+        self.suppress_warnings = True
+        self.error_action = 'trace'
+        self.trace = False
+        self.random = False
+        self.random_state = None
+        self.n_fits = 10
+        self.return_valid_fits = False
+        self.out_of_sample_size = 0
+        self.scoring = 'mse'
+        self.scoring_args = None
+        self.with_intercept = 'auto'
 
         self.__dict__.update(kwargs)
 
-        # The optimization algorithm to use
-        self.optimizer = Adam(lr=self.learning_rate)
-
-        # --------------------------------------------------------------------------------
-
-        # Create the input
-        input = [
-            Input(
-                shape=(num_inputs,)
-            )
-        ]
-
-        # Create the layers
-        layers = []
-        layers.extend(input)
-
-        # Build up the layers
-        for j in range(len(self.ff_layers)):
-
-            # --- Add the Dense layers (fully connected) to the model ---
-
-            layers.append(
-                Dense(
-                    units=self.ff_layers[j][0],
-                    activation=self.ff_layers[j][1],
-                    kernel_regularizer=l2(self.ff_layers[j][2]),
-                    use_bias=self.ff_layers[j][4]
-                )(layers[-1])
-            )
-
-            # --- Add the Dropout layers (normal or gaussian) to the model ---
-
-            if self.ff_layers[j][5] == "normal":
-                layers.append(
-                    Dropout(
-                        self.ff_layers[j][3]
-                    )(layers[-1])
-                )
-            elif self.ff_layers[j][5] == "gaussian":
-                layers.append(
-                    GaussianDropout(
-                        self.ff_layers[j][3]
-                    )(layers[-1])
-                )
-
-        # Add the final dense layer
-        output = Dense(
-            units=self.num_outputs,
-            activation=self.final_activation
-        )(layers[-1])
-
-        # Create the neural network model and compile it
-        nnet = Model(inputs=input, outputs=output, name=self.name)
-
-        # Finally compile the neural network so we can use it with the weights going forward
-        nnet.compile(optimizer=self.optimizer, loss=self.objective)
-
-        # Assign nnet to self.model
-        self.model = nnet
-        if self.print_model_summary:
-            print("")
-            self.model.summary()
+        self.model = None
 
     def train(self, x_train: np.ndarray, y_train: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, load_model=True) -> None:
 
@@ -121,29 +77,22 @@ class ARIMA:
             self.load()
 
         else:
-            # What we want back from Keras
-            callbacks_list = []
-
-            # The default patience is stopping_patience
-            patience = self.stopping_patience
-
-            # Create an early stopping callback and add it
-            callbacks_list.append(
-                EarlyStopping(
-                    verbose=1,
-                    monitor='val_acc',
-                    patience=patience))
-
-            # Train the model
-            training_process = self.model.fit(
-                x=x_train,
-                y=y_train,
-                epochs=self.epochs,
-                batch_size=self.batch_size,
-                verbose=self.keras_verbose,
-                callbacks=callbacks_list,
-                validation_data=(x_valid, y_valid)
-            )
+            self.model = auto_arima(y_train, x_train, start_p=self.start_p, d=self.d, start_q=self.start_q,
+                                    max_p=self.max_p, max_d=self.max_d, max_q=self.max_q, start_P=self.start_P,
+                                    D=self.D, start_Q=self.start_Q, max_P=self.max_P, max_D=self.max_D,
+                                    max_Q=self.max_Q, max_order=self.max_order, m=self.m, seasonal=self.seasonal,
+                                    stationary=self.stationary, information_criterion=self.information_criterion,
+                                    alpha=self.alpha, test=self.test, seasonal_test=self.seasonal_test,
+                                    stepwise=self.stepwise, n_jobs=self.n_jobs, start_params=self.start_params,
+                                    trend=self.trend, method=self.method, maxiter=self.maxiter,
+                                    offset_test_args=self.offset_test_args,
+                                    seasonal_test_args=self.seasonal_test_args,
+                                    suppress_warnings=self.suppress_warnings,
+                                    error_action=self.error_action, trace=self.trace,
+                                    random=self.random, random_state=self.random_state, n_fits=self.n_fits,
+                                    return_valid_fits=self.return_valid_fits,
+                                    out_of_sample_size=self.out_of_sample_size, scoring=self.out_of_sample_size,
+                                    scoring_args=self.scoring_args, with_intercept=self.with_intercept)
 
             self.save()
 
@@ -159,7 +108,8 @@ class ARIMA:
         project_dir = Path(__file__).resolve().parents[2]
         models_dir = str(project_dir) + '/models/' + self.name + '/'
         utils.check_folder(models_dir)
-        self.model.save(models_dir + self.name + ".h5")
+        with open(self.name + ".pkl", "wb") as pkl:
+            pickle.dump(self.model, pkl)
         print("Saved model to disk")
 
     def load(self):
@@ -167,7 +117,8 @@ class ARIMA:
             project_dir = Path(__file__).resolve().parents[2]
             models_dir = str(project_dir) + '/models/' + self.name + '/'
             utils.check_folder(models_dir)
-            self.model = load_model(models_dir + self.name + ".h5")
+            with open(self.name + ".pkl", "wb") as pkl:
+                self.model = pickle.load(pkl)
             print("Loaded " + self.name + " model from disk")
 
         except ValueError as e:
