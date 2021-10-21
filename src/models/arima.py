@@ -17,9 +17,7 @@ class ARIMA(FTSModel):
     """
     def __init__(self, name: str, **kwargs):
         """
-        :param name: the user specified name given for the neural network
-        :param num_inputs: the number of inputs that goes into the model
-        :param num_outputs: the number of possible classes
+        :param name: the user specified name given for the model
         """
         self.name = name
 

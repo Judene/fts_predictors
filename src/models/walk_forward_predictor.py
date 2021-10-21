@@ -180,5 +180,6 @@ class WalkForwardPredictor:
         # Create dataframe for predicted values
         pred_df = pd.DataFrame(np.column_stack([np.squeeze(predictions), np.squeeze(output_data)]))
         pred_df.columns = ["PRED", "TRUE"]
+        pred_df.index = predictions.index
 
         return pred_df, error
