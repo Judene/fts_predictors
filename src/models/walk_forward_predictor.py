@@ -9,7 +9,7 @@ class WalkForwardPredictor:
                  validation_size=10, sliding_window=True, random_validation=False, train_from_scratch=False):
         """
         TODO: Update description
-        TODO: Check loading of models
+        TODO: Future upgrade - Train WF from last checkpoint
         :param model: An fts_model instance
         :param start_date: start date of the simulation
         :param end_date: end date of the simulation
@@ -139,17 +139,21 @@ class WalkForwardPredictor:
             y_train = temp_output_data.loc[x_train.index].fillna(0.0)
 
             # 6) Train model and/or predict
-            if t % self.frequency == 0 or self.model is None:
-
-                t_model = self.model
-                if self.train_from_scratch:
+            if t % self.frequency == 0:
+                if self.model is None:
+                    t_model = self.model
                     t_model.train(x_train, y_train, x_validation, y_validation, load_model=False)
+
                 else:
-                    try:
-                        t_model.load()
+                    t_model = self.model
+                    if self.train_from_scratch:
                         t_model.train(x_train, y_train, x_validation, y_validation, load_model=False)
-                    except OSError:
-                        t_model.train(x_train, y_train, x_validation, y_validation, load_model=False)
+                    else:
+                        try:
+                            t_model.load()
+                            t_model.train(x_train, y_train, x_validation, y_validation, load_model=False)
+                        except OSError:
+                            t_model.train(x_train, y_train, x_validation, y_validation, load_model=False)
 
                 pred = t_model.predict(x_test)
 
