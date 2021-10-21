@@ -10,8 +10,10 @@ from keras.utils import plot_model
 
 import src.utils as utils
 
+from src.models.fts_model import FTSModel
 
-class MultiLayerPerceptron:
+
+class MultiLayerPerceptron(FTSModel):
     """
     An implementation of a deep neural networks.
     """
@@ -21,6 +23,7 @@ class MultiLayerPerceptron:
         :param num_inputs: the number of inputs that goes into the model
         :param num_outputs: the number of possible classes
         """
+
         self.name = name
         self.num_inputs = num_inputs
         self.num_outputs = num_outputs
@@ -49,8 +52,8 @@ class MultiLayerPerceptron:
         self.learning_rate = 0.001
         # If this many stagnant epochs are seen, stop training
         self.stopping_patience = 20
-
-        self.__dict__.update(kwargs)
+        #
+        # self.__dict__.update(kwargs)
 
         # The optimization algorithm to use
         self.optimizer = Adam(lr=self.learning_rate)
@@ -111,11 +114,16 @@ class MultiLayerPerceptron:
 
         # Assign nnet to self.model
         self.model = nnet
+
+        # Call the parent class constructor to initialize the object's variables
+        super().__init__(name, nnet, *args, **kwargs)
+
         if self.print_model_summary:
             print("")
             self.model.summary()
 
-    def train(self, x_train: np.ndarray, y_train: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, load_model=True) -> None:
+    def train(self, x_train: np.ndarray, y_train: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray,
+              load_model=True) -> None:
 
         if load_model:
             self.load()

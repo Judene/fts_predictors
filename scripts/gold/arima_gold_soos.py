@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 
-from src.models.mlp import MultiLayerPerceptron
+from src.models.arima import ARIMA
 
 from src.utils import series_to_supervised
 
@@ -18,7 +18,7 @@ from src.utils import series_to_supervised
 # =====================================================================================================================
 
 # Set number of features
-n_features = 2
+n_features = 1
 
 # Get data path or create a directory if it does not exist
 # TODO: This is hacky. Need to fix
@@ -37,7 +37,9 @@ gold_etf_data = gold_etf_data["GLD"].to_frame().ffill().dropna()
 gold_etf_data = gold_etf_data.pct_change()
 
 # Create supervised learning problem
+# TODO: Make sure multiple features can work with ARIMA
 gold_etf_data = series_to_supervised(gold_etf_data, n_in=n_features, n_out=1)
+gold_etf_data = gold_etf_data.fillna(0.0)
 
 # Create training and testing data
 x_train, x_test, y_train, y_test = train_test_split(gold_etf_data.iloc[:, :-1], gold_etf_data.iloc[:, -1],
@@ -52,43 +54,14 @@ x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.
 # =====================================================================================================================
 
 
-# Create MLP
-mlp = MultiLayerPerceptron(
-    name="mlp_gold_nwf",
-    num_inputs=n_features,
-    num_outputs=1,
-    # If true, training info is outputted to stdout
-    keras_verbose=True,
-    # A summary of the NN is printed to stdout
-    print_model_summary=True,
-    # ff_layers = [units, activation, regularization, dropout, use_bias]
-    ff_layers=[
-        [512, "relu", 0.0, 0.2, True, "gaussian"],
-        [512, "relu", 0.0, 0.2, True, "gaussian"],
-        [512, "relu", 0.0, 0.2, True, "gaussian"]
-    ],
-    # The final output layer's activation function
-    final_activation="tanh",
-    # The objective function for the NN
-    objective="mse",
-    # The maximum number of epochs to run
-    epochs=2000,
-    # The batch size to use in the NN
-    batch_size=64,
-    # The learning rate used in optimization
-    learning_rate=0.001,
-    # If this many stagnant epochs are seen, stop training
-    stopping_patience=50
-)
+# Create ARIMA
+arima = ARIMA(name="arima_gold_nwf")
 
 # Train MLP model from scratch
-mlp.train(x_train, y_train, x_val, y_val, load_model=False)
-
-# Plot the model
-# mlp.plot_model()
+arima.train(x_train, y_train, x_val, y_val, load_model=False)
 
 # Predict
-predicted = mlp.predict(x_test)
+predicted = arima.predict(x_test)
 
 # Create dataframe for predicted values
 pred_df = pd.DataFrame(np.column_stack([np.squeeze(predicted), y_test]))

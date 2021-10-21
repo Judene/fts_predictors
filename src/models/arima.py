@@ -1,20 +1,17 @@
 import numpy as np
+import pandas as pd
+
 from pathlib import Path
 import pickle
-from keras.callbacks import EarlyStopping
-from keras.layers import Dense, Dropout, Input, GaussianDropout
-from keras.models import load_model
-from keras.models import Model
-from keras.optimizers import Adam
-from keras.regularizers import l2
-from keras.utils import plot_model
 
 from pmdarima.arima import auto_arima
 
 import src.utils as utils
 
+from src.models.fts_model import FTSModel
 
-class ARIMA:
+
+class ARIMA(FTSModel):
     """
     An implementation of an auto-ARIMA model
     """
@@ -67,11 +64,13 @@ class ARIMA:
         self.scoring_args = None
         self.with_intercept = 'auto'
 
-        self.__dict__.update(kwargs)
-
         self.model = None
 
-    def train(self, x_train: np.ndarray, y_train: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray, load_model=True) -> None:
+        # Call the parent class constructor to initialize the object's variables
+        super().__init__(name, None, **kwargs)
+
+    def train(self, x_train: np.ndarray, y_train: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray,
+              load_model=True) -> None:
 
         if load_model:
             self.load()
@@ -91,12 +90,13 @@ class ARIMA:
                                     error_action=self.error_action, trace=self.trace,
                                     random=self.random, random_state=self.random_state, n_fits=self.n_fits,
                                     return_valid_fits=self.return_valid_fits,
-                                    out_of_sample_size=self.out_of_sample_size, scoring=self.out_of_sample_size,
+                                    out_of_sample_size=self.out_of_sample_size, scoring=self.scoring,
                                     scoring_args=self.scoring_args, with_intercept=self.with_intercept)
 
             self.save()
 
     def evaluate(self, x_test: np.ndarray, y_test: np.ndarray) -> tuple:
+        # TODO: Double-check!
         score = self.model.evaluate(x_test, y_test, batch_size=self.batch_size, verbose=0)
         test_loss = score[0]
         test_accuracy = score[1]
@@ -108,7 +108,7 @@ class ARIMA:
         project_dir = Path(__file__).resolve().parents[2]
         models_dir = str(project_dir) + '/models/' + self.name + '/'
         utils.check_folder(models_dir)
-        with open(self.name + ".pkl", "wb") as pkl:
+        with open(models_dir + self.name + ".pkl", "wb") as pkl:
             pickle.dump(self.model, pkl)
         print("Saved model to disk")
 
@@ -117,16 +117,13 @@ class ARIMA:
             project_dir = Path(__file__).resolve().parents[2]
             models_dir = str(project_dir) + '/models/' + self.name + '/'
             utils.check_folder(models_dir)
-            with open(self.name + ".pkl", "wb") as pkl:
+            with open(models_dir + self.name + ".pkl", "wb") as pkl:
                 self.model = pickle.load(pkl)
             print("Loaded " + self.name + " model from disk")
 
         except ValueError as e:
             print("No saved model found. Check file name or train from scratch")
 
-    def predict(self, x: np.ndarray) -> np.ndarray:
-        prediction = self.model.predict(x)
+    def predict(self, x: (np.ndarray, pd.DataFrame)) -> np.ndarray:
+        prediction = self.model.predict(n_periods=np.shape(x)[0], X=x)
         return prediction
-
-    def plot_model(self):
-        plot_model(self.model, to_file=self.name + "_model.png", show_shapes=True)

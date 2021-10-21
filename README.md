@@ -6,7 +6,7 @@ series. Models can either be trained _once-off_, or in a _walk-forward fashion_.
 - [x] Multi-layered Perceptron
 - [x] GRU Neural Network
 - [x] ARIMA
-- [ ] Support Vector Regression
+- [x] Support Vector Regression
 - [ ] Transformer Network
 
 Installation on Anaconda
