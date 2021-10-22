@@ -4,16 +4,16 @@ import pandas as pd
 from pathlib import Path
 import pickle
 
-from sklearn.svm import SVR
+from sklearn.linear_model import LinearRegression
 
 import src.utils as utils
 
 from src.models.fts_model import FTSModel
 
 
-class SupportVectorRegression(FTSModel):
+class LRegression(FTSModel):
     """
-    An implementation of a Support Vector Regression model
+    An implementation of Linear Regression
     """
     def __init__(self, name: str, **kwargs):
         """
@@ -22,27 +22,19 @@ class SupportVectorRegression(FTSModel):
         self.name = name
 
         # Model parameters
-        # See: https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html
-        self.kernel = 'rbf'
-        self.degree = 3
-        self.gamma = 'scale'
-        self.coef0 = 0.0
-        self.tol = 0.001
-        self.C = 1.0
-        self.epsilon = 0.1
-        self.shrinking = True
-        self.cache_size = 200
-        self.verbose = False
-        self.max_iter = -1
+        # See: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html
+        self.fit_intercept = True
+        self.copy_X = True
+        self.n_jobs = None
+        self.positive = False
 
-        svr = SVR(kernel=self.kernel, degree=self.degree, gamma=self.gamma, coef0=self.coef0,
-                  tol=self.tol, C=self.C, epsilon=self.epsilon, shrinking=self.shrinking,
-                  cache_size=self.cache_size, verbose=self.verbose, max_iter=self.max_iter)
+        lr = LinearRegression(fit_intercept=self.fit_intercept, copy_X=self.copy_X, n_jobs=self.n_jobs,
+                              positive=self.positive)
 
-        self.model = svr
+        self.model = lr
 
         # Call the parent class constructor to initialize the object's variables
-        super().__init__(name, svr, **kwargs)
+        super().__init__(name, lr, **kwargs)
 
     def train(self, x_train: np.ndarray, y_train: np.ndarray, x_valid: np.ndarray, y_valid: np.ndarray,
               load_model=True) -> None:
@@ -81,5 +73,5 @@ class SupportVectorRegression(FTSModel):
             print("No saved model found. Check file name or train from scratch")
 
     def predict(self, x: (np.ndarray, pd.DataFrame)) -> np.ndarray:
-        prediction = self.model.predict(x)
+        prediction = self.model.predict(X=x)
         return prediction
