@@ -60,3 +60,4 @@ svr_predictions_cumulative.plot()
 plt.title("Cumulative Return: Support Vector Regression")
 plt.show()
 plt.close()
+

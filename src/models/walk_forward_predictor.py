@@ -178,7 +178,8 @@ class WalkForwardPredictor:
             index=predictions.index, columns=["error"])
 
         # Create dataframe for predicted values
-        pred_df = pd.DataFrame(np.column_stack([np.squeeze(predictions), np.squeeze(output_data)]))
+        pred_df = pd.DataFrame(
+            np.column_stack([np.squeeze(predictions.shift(self.prediction_length)), np.squeeze(output_data)]))
         pred_df.columns = ["PRED", "TRUE"]
         pred_df.index = predictions.index
 
