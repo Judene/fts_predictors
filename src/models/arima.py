@@ -62,6 +62,8 @@ class ARIMA(FTSModel):
         self.scoring_args = None
         self.with_intercept = 'auto'
 
+        self.__dict__.update(kwargs)
+
         self.model = None
 
         # Call the parent class constructor to initialize the object's variables

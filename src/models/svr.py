@@ -35,6 +35,8 @@ class SupportVectorRegression(FTSModel):
         self.verbose = False
         self.max_iter = -1
 
+        self.__dict__.update(kwargs)
+
         svr = SVR(kernel=self.kernel, degree=self.degree, gamma=self.gamma, coef0=self.coef0,
                   tol=self.tol, C=self.C, epsilon=self.epsilon, shrinking=self.shrinking,
                   cache_size=self.cache_size, verbose=self.verbose, max_iter=self.max_iter)

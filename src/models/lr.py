@@ -28,6 +28,8 @@ class LRegression(FTSModel):
         self.n_jobs = None
         self.positive = False
 
+        self.__dict__.update(kwargs)
+
         lr = LinearRegression(fit_intercept=self.fit_intercept, copy_X=self.copy_X, n_jobs=self.n_jobs,
                               positive=self.positive)
 

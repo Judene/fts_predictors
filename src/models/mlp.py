@@ -52,8 +52,8 @@ class MultiLayerPerceptron(FTSModel):
         self.learning_rate = 0.001
         # If this many stagnant epochs are seen, stop training
         self.stopping_patience = 20
-        #
-        # self.__dict__.update(kwargs)
+
+        self.__dict__.update(kwargs)
 
         # The optimization algorithm to use
         self.optimizer = Adam(lr=self.learning_rate)
