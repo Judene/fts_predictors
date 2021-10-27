@@ -71,7 +71,7 @@ wf_model = WalkForwardPredictor(model=gru_model, start_date="2004-11-08", end_da
 # Train our model through time, and obtain the predictions and errors
 rnn_predictions, rnn_error = wf_model.train_and_predict(input_data, output_data)
 
-print("GRU Walk Forward")
+print("RNN Walk Forward")
 
 print(rnn_predictions)
 print(rnn_error)
