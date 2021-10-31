@@ -20,7 +20,7 @@ if not os.path.exists(os.path.join(data_path, "bond.csv")):
 
 # Get bond data
 bond_etf_data = pd.read_csv(os.path.join(data_path, "bond.csv"), index_col=0)
-bond_etf_data = bond_etf_data["GLD"].to_frame().ffill().dropna()
+bond_etf_data = bond_etf_data.to_frame().ffill().dropna()
 dates = bond_etf_data
 
 n_features = 1
