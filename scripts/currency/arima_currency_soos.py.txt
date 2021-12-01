@@ -26,23 +26,23 @@ pathlib.Path(os.path.join(os.path.dirname(os.getcwd()), "..", "data")).mkdir(par
 data_path = os.path.join(os.path.dirname(os.getcwd()), "..", "data")
 
 # Check if file exists
-if not os.path.exists(os.path.join(data_path, "bond.csv")):
+if not os.path.exists(os.path.join(data_path, "usd_zar.csv")):
     raise ValueError("No data in data folder!")
 
-# Get bond data
-bond_etf_data = pd.read_csv(os.path.join(data_path, "bond.csv"), index_col=0)
-bond_etf_data = bond_etf_data.to_frame().ffill().dropna()
+# Get currency data
+currency_data = pd.read_csv(os.path.join(data_path, "usd_zar.csv"), index_col=0)
+currency_data = currency_data.to_frame().ffill().dropna()
 
 # Make data stationary
-bond_etf_data = bond_etf_data.pct_change()
+currency_data = currency_data.pct_change()
 
 # Create supervised learning problem
 # TODO: Make sure multiple features can work with ARIMA
-bond_etf_data = series_to_supervised(bond_etf_data, n_in=n_features, n_out=1)
-bond_etf_data = bond_etf_data.fillna(0.0)
+currency_data = series_to_supervised(currency_data, n_in=n_features, n_out=1)
+currency_data = currency_data.fillna(0.0)
 
 # Create training and testing data
-x_train, x_test, y_train, y_test = train_test_split(bond_etf_data.iloc[:, :-1], bond_etf_data.iloc[:, -1],
+x_train, x_test, y_train, y_test = train_test_split(currency_data.iloc[:, :-1], currency_data.iloc[:, -1],
                                                     test_size=0.1, random_state=1, shuffle=False)
 
 # Create validation
@@ -55,7 +55,7 @@ x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.
 
 
 # Create ARIMA
-arima = ARIMA(name="arima_bond_nwf")
+arima = ARIMA(name="arima_currency_nwf")
 
 # Train ARIMA model from scratch
 arima.train(x_train, y_train, x_val, y_val, load_model=False)
