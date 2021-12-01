@@ -3,11 +3,12 @@ fts_predictors (_Financial Time Series Predictors_) contains standardized code f
 series. Models can either be trained _once-off_, or in a _walk-forward fashion_. Models included:
 
 - [x] Linear Regression
-- [x] Multi-layered Perceptron
-- [x] GRU Neural Network
 - [x] ARIMA
 - [x] Support Vector Regression
-- [ ] Transformer Network
+- [x] Multi-layered Perceptron
+- [x] Recurrent neural network
+- [x] Long short term memory
+- [x] GRU Neural Network
 
 Installation on Anaconda
 -------------------------
