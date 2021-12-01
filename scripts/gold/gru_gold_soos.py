@@ -1,3 +1,8 @@
+import warnings
+# This is hacky, but due to tensorflow requiring lower numpy version, but pmdarima requiring higher version, this is
+# done to clear the console.
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 import os
 import pathlib
 
@@ -38,14 +43,19 @@ gold_etf_data = gold_etf_data.pct_change()
 
 # Create supervised learning problem
 gold_etf_data = series_to_supervised(gold_etf_data, n_in=n_features, n_out=1)
+gold_etf_data = gold_etf_data.fillna(0.0)
 
 # Create training and testing data
 x_train, x_test, y_train, y_test = train_test_split(gold_etf_data.iloc[:, :-1], gold_etf_data.iloc[:, -1],
                                                     test_size=0.1, random_state=1, shuffle=False)
 
 # Create validation
-x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.15, random_state=1, shuffle=False)
+x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.01, random_state=1, shuffle=False)
 
+print("x_train: ", np.shape(x_train))
+print("x_val: ", np.shape(x_val))
+print("y_train: ", np.shape(y_train))
+print("y_val: ", np.shape(y_val))
 
 # =====================================================================================================================
 # BUILD MODEL
@@ -61,6 +71,14 @@ gru = GRURecurrentNN(
     keras_verbose=True,
     # A summary of the NN is printed to stdout
     print_model_summary=True,
+    # gru_layers = [units, kernel_regularizer (l2), recurrent_regularizer (l2), dropout, recurrent_dropout]
+    gru_layers=[
+        [50, 0.0, 0.0, 0.2, 0.0],
+        [50, 0.0, 0.0, 0.2, 0.0],
+        [50, 0.0, 0.0, 0.2, 0.0]
+    ],
+    # Statefulness
+    stateful_training=False,
     # ff_layers = [units, activation, regularization, dropout, use_bias]
     ff_layers=[
         [512, "relu", 0.0, 0.2, True, "gaussian"],
@@ -74,11 +92,11 @@ gru = GRURecurrentNN(
     # The maximum number of epochs to run
     epochs=2000,
     # The batch size to use in the NN
-    batch_size=64,
+    batch_size=32,
     # The learning rate used in optimization
     learning_rate=0.001,
     # If this many stagnant epochs are seen, stop training
-    stopping_patience=50
+    stopping_patience=15
 )
 
 # Train MLP model from scratch

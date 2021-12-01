@@ -24,6 +24,7 @@ if not os.path.exists(os.path.join(data_path, "local_etfs_close.csv")):
 # Get gold data
 gold_etf_data = pd.read_csv(os.path.join(data_path, "local_etfs_close.csv"), index_col=0)
 gold_etf_data = gold_etf_data["GLD"].to_frame().ffill().dropna()
+gold_etf_data = gold_etf_data.fillna(0.0)
 dates = gold_etf_data
 
 n_features = 2

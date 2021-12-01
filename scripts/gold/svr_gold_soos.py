@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 
-from src.models.arima import ARIMA
+from src.models.svr import SupportVectorRegression
 
 from src.utils import series_to_supervised
 
@@ -18,7 +18,7 @@ from src.utils import series_to_supervised
 # =====================================================================================================================
 
 # Set number of features
-n_features = 1
+n_features = 3
 
 # Get data path or create a directory if it does not exist
 # TODO: This is hacky. Need to fix
@@ -37,7 +37,6 @@ gold_etf_data = gold_etf_data["GLD"].to_frame().ffill().dropna()
 gold_etf_data = gold_etf_data.pct_change()
 
 # Create supervised learning problem
-# TODO: Make sure multiple features can work with ARIMA
 gold_etf_data = series_to_supervised(gold_etf_data, n_in=n_features, n_out=1)
 gold_etf_data = gold_etf_data.fillna(0.0)
 
@@ -54,14 +53,14 @@ x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.
 # =====================================================================================================================
 
 
-# Create ARIMA
-arima = ARIMA(name="arima_gold_nwf")
+# Create SVR
+svr = SupportVectorRegression(name="svr_gold_nwf")
 
-# Train ARIMA model from scratch
-arima.train(x_train, y_train, x_val, y_val, load_model=False)
+# Train SVR model from scratch
+svr.train(x_train, y_train, x_val, y_val, load_model=False)
 
 # Predict
-predicted = arima.predict(x_test)
+predicted = svr.predict(x_test)
 
 # Create dataframe for predicted values
 pred_df = pd.DataFrame(np.column_stack([np.squeeze(predicted), y_test]))

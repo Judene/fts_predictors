@@ -1,17 +1,19 @@
 import numpy as np
 from pathlib import Path
 from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.layers import Dense, Dropout, Input, GaussianDropout, GRU, CuDNNGRU
+from tensorflow.keras.layers import Dense, Dropout, Input, GaussianDropout, GRU, CuDNNGRU, Reshape
 from tensorflow.keras.models import load_model
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.utils import plot_model
 
+from src.models.fts_model import FTSModel
+
 import src.utils as utils
 
 
-class GRURecurrentNN:
+class GRURecurrentNN(FTSModel):
     """
     An implementation of a GRU (Gated Recurrent Unit).
     """
@@ -78,7 +80,7 @@ class GRURecurrentNN:
         # --------------------------------------------------------------------------------
 
         # Create the input
-        input = [
+        inputs = [
             Input(
                 shape=(num_inputs,)
             )
@@ -86,7 +88,12 @@ class GRURecurrentNN:
 
         # Create the layers
         layers = []
-        layers.extend(input)
+        layers.extend(inputs)
+
+        # For GRU, we need 3D inputs (num_samples, num_timesteps, num_features)
+        layers.append(
+            Reshape((1, num_inputs))(layers[-1])
+        )
 
         for i in range(len(self.gru_layers)):
 
@@ -161,10 +168,13 @@ class GRURecurrentNN:
         )(layers[-1])
 
         # Create the neural network model and compile it
-        nnet = Model(inputs=input, outputs=output, name=self.name)
+        nnet = Model(inputs=inputs, outputs=output, name=self.name)
 
         # Finally compile the neural network so we can use it with the weights going forward
         nnet.compile(optimizer=self.optimizer, loss=self.objective)
+
+        # Call the parent class constructor to initialize the object's variables
+        super().__init__(name, nnet, *args, **kwargs)
 
         # Assign nnet to self.model
         self.model = nnet
@@ -189,7 +199,7 @@ class GRURecurrentNN:
             callbacks_list.append(
                 EarlyStopping(
                     verbose=1,
-                    monitor='val_acc',
+                    monitor="val_loss",
                     patience=patience))
 
             # Train the model

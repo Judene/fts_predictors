@@ -2,10 +2,11 @@ import os
 import pathlib
 
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 from src.models.walk_forward_predictor import WalkForwardPredictor
-from src.models.arima import ARIMA
+from src.models.svr import SupportVectorRegression
 
 from src.utils import series_to_supervised
 
@@ -30,19 +31,33 @@ input_data = gold_etf_data.drop(['var1(t)'], axis=1)
 output_data = gold_etf_data.drop(['var1(t-1)'], axis=1)
 
 
-# Create ARIMA model
-arima_model = ARIMA(name="arima_gold_wf")
+# Create SVR model
+svr_model = SupportVectorRegression(name="svr_gold_wf")
 
 # Initiate our model
-wf_model = WalkForwardPredictor(model=arima_model, start_date="2004-11-08", end_date="2021-06-01",
-                                input_pct_change=1, output_pct_change=1, window_size=252, frequency=42,
-                                prediction_length=10, validation_size=2, sliding_window=False,
+wf_model = WalkForwardPredictor(model=svr_model, start_date="2004-11-08", end_date="2021-06-01",
+                                input_pct_change=1, output_pct_change=1, window_size=252, frequency=1,
+                                prediction_length=10, validation_size=2, sliding_window=True,
                                 random_validation=False, train_from_scratch=True)
 
 # Train our model through time, and obtain the predictions and errors
-arima_predictions, arima_error = wf_model.train_and_predict(input_data, output_data)
+svr_predictions, svr_error = wf_model.train_and_predict(input_data, output_data)
 
-print("ARIMA Walk Forward")
+print("SVR Walk Forward")
 
-print(arima_predictions)
-print(arima_error)
+print(svr_predictions)
+print(svr_error)
+
+wf_se = svr_error ** 2.0
+wf_se.plot()
+plt.title("SE: Support Vector Regression")
+plt.show()
+
+svr_predictions_cumulative = svr_predictions.fillna(0.0)
+svr_predictions_cumulative = (1.0 + svr_predictions_cumulative).cumprod()
+svr_predictions_cumulative = svr_predictions_cumulative.apply(lambda x: np.log(x), axis=0)
+svr_predictions_cumulative.plot()
+plt.title("Cumulative Return: Support Vector Regression")
+plt.show()
+plt.close()
+
