@@ -26,24 +26,23 @@ pathlib.Path(os.path.join(os.path.dirname(os.getcwd()), "..", "data")).mkdir(par
 data_path = os.path.join(os.path.dirname(os.getcwd()), "..", "data")
 
 # Check if file exists
-if not os.path.exists(os.path.join(data_path, "local_etfs_close.csv")):
+if not os.path.exists(os.path.join(data_path, "s&p500_index.csv")):
     raise ValueError("No data in data folder!")
 
-# Get bond data
-bond_etf_data = pd.read_csv(os.path.join(data_path, "local_etfs_close.csv"), index_col=0)
-bond_etf_data = bond_etf_data["GLD"].to_frame().ffill().dropna()
+# Get index data
+index_data = pd.read_csv(os.path.join(data_path, "s&p500_index.csv"), index_col=0)
+index_data = index_data.to_frame().ffill().dropna()
 
 # Make data stationary
-bond_etf_data = bond_etf_data.pct_change()
+index_data = index_data.pct_change()
 
 # Create supervised learning problem
-bond_etf_data = series_to_supervised(bond_etf_data, n_in=n_features, n_out=1)
-bond_etf_data = bond_etf_data.fillna(0.0)
+index_data = series_to_supervised(index_data, n_in=n_features, n_out=1)
+index_data = index_data.fillna(0.0)
 
 # Create training and testing data
-x_train, x_test, y_train, y_test = train_test_split(bond_etf_data.iloc[:, :-1], bond_etf_data.iloc[:, -1],
+x_train, x_test, y_train, y_test = train_test_split(index_data.iloc[:, :-1], index_data.iloc[:, -1],
                                                     test_size=0.1, random_state=1, shuffle=False)
-
 # Create validation
 x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.15, random_state=1, shuffle=False)
 
@@ -54,7 +53,7 @@ x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.
 
 
 # Create SVR
-svr = SupportVectorRegression(name="svr_bond_nwf")
+svr = SupportVectorRegression(name="svr_index_nwf")
 
 # Train SVR model from scratch
 svr.train(x_train, y_train, x_val, y_val, load_model=False)
