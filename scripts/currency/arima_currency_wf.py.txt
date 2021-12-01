@@ -15,23 +15,23 @@ pathlib.Path(os.path.join(os.path.dirname(os.getcwd()), "..", "data")).mkdir(par
 data_path = os.path.join(os.path.dirname(os.getcwd()), "..", "data")
 
 # Check if file exists
-if not os.path.exists(os.path.join(data_path, "bond.csv")):
+if not os.path.exists(os.path.join(data_path, "usd_zar.csv")):
     raise ValueError("No data in data folder!")
 
-# Get bond data
-bond_etf_data = pd.read_csv(os.path.join(data_path, "bond.csv"), index_col=0)
-bond_etf_data = bond_etf_data.to_frame().ffill().dropna()
-dates = bond_etf_data
+# Get currency data
+currency_data = pd.read_csv(os.path.join(data_path, "usd_zar.csv"), index_col=0)
+currency_data = currency_data.to_frame().ffill().dropna()
+dates = currency_data
 
 n_features = 1
 
-bond_etf_data = series_to_supervised(bond_etf_data, n_in=n_features, n_out=1)
-input_data = bond_etf_data.drop(['var1(t)'], axis=1)
-output_data = bond_etf_data.drop(['var1(t-1)'], axis=1)
+currency_data = series_to_supervised(currency_data, n_in=n_features, n_out=1)
+input_data = currency_data.drop(['var1(t)'], axis=1)
+output_data = currency_data.drop(['var1(t-1)'], axis=1)
 
 
 # Create ARIMA model
-arima_model = ARIMA(name="arima_bond_wf")
+arima_model = ARIMA(name="arima_currency_wf")
 
 # Initiate our model
 wf_model = WalkForwardPredictor(model=arima_model, start_date="2004-11-08", end_date="2021-06-01",
