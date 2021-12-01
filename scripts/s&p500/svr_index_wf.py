@@ -16,23 +16,22 @@ pathlib.Path(os.path.join(os.path.dirname(os.getcwd()), "..", "data")).mkdir(par
 data_path = os.path.join(os.path.dirname(os.getcwd()), "..", "data")
 
 # Check if file exists
-if not os.path.exists(os.path.join(data_path, "local_etfs_close.csv")):
+if not os.path.exists(os.path.join(data_path, "s&p500_index.csv")):
     raise ValueError("No data in data folder!")
 
-# Get bond data
-bond_etf_data = pd.read_csv(os.path.join(data_path, "local_etfs_close.csv"), index_col=0)
-bond_etf_data = bond_etf_data["GLD"].to_frame().ffill().dropna()
-dates = bond_etf_data
+# Get index data
+index_data = pd.read_csv(os.path.join(data_path, "s&p500_index.csv"), index_col=0)
+index_data = index_data.to_frame().ffill().dropna()
+dates = index_data
 
 n_features = 1
 
-bond_etf_data = series_to_supervised(bond_etf_data, n_in=n_features, n_out=1)
-input_data = bond_etf_data.drop(['var1(t)'], axis=1)
-output_data = bond_etf_data.drop(['var1(t-1)'], axis=1)
-
+index_data = series_to_supervised(index_data, n_in=n_features, n_out=1)
+input_data = index_data.drop(['var1(t)'], axis=1)
+output_data = index_data.drop(['var1(t-1)'], axis=1)
 
 # Create SVR model
-svr_model = SupportVectorRegression(name="svr_bond_wf")
+svr_model = SupportVectorRegression(name="svr_index_wf")
 
 # Initiate our model
 wf_model = WalkForwardPredictor(model=svr_model, start_date="2004-11-08", end_date="2021-06-01",
