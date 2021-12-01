@@ -1,0 +1,100 @@
+import os
+import pathlib
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+
+from src.models.mlp import MultiLayerPerceptron
+
+from src.utils import series_to_supervised
+
+# TODO: Add description! Mention datasources
+
+# =====================================================================================================================
+# GET DATA
+# =====================================================================================================================
+
+# Set number of features
+n_features = 2
+
+# Get data path or create a directory if it does not exist
+# TODO: This is hacky. Need to fix
+pathlib.Path(os.path.join(os.path.dirname(os.getcwd()), "..", "data")).mkdir(parents=True, exist_ok=True)
+data_path = os.path.join(os.path.dirname(os.getcwd()), "..", "data")
+
+# Check if file exists
+if not os.path.exists(os.path.join(data_path, "local_etfs_close.csv")):
+    raise ValueError("No data in data folder!")
+
+# Get bond data
+bond_etf_data = pd.read_csv(os.path.join(data_path, "local_etfs_close.csv"), index_col=0)
+bond_etf_data = bond_etf_data["GLD"].to_frame().ffill().dropna()
+
+# Make data stationary
+bond_etf_data = bond_etf_data.pct_change()
+
+# Create supervised learning problem
+bond_etf_data = series_to_supervised(bond_etf_data, n_in=n_features, n_out=1)
+
+# Create training and testing data
+x_train, x_test, y_train, y_test = train_test_split(bond_etf_data.iloc[:, :-1], bond_etf_data.iloc[:, -1],
+                                                    test_size=0.1, random_state=1, shuffle=False)
+
+# Create validation
+x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.15, random_state=1, shuffle=False)
+
+
+# =====================================================================================================================
+# BUILD MODEL
+# =====================================================================================================================
+
+
+# Create MLP
+mlp = MultiLayerPerceptron(
+    name="mlp_bond_nwf",
+    num_inputs=n_features,
+    num_outputs=1,
+    # If true, training info is outputted to stdout
+    keras_verbose=True,
+    # A summary of the NN is printed to stdout
+    print_model_summary=True,
+    # ff_layers = [units, activation, regularization, dropout, use_bias]
+    ff_layers=[
+        [512, "relu", 0.0, 0.2, True, "gaussian"],
+        [512, "relu", 0.0, 0.2, True, "gaussian"],
+        [512, "relu", 0.0, 0.2, True, "gaussian"]
+    ],
+    # The final output layer's activation function
+    final_activation="tanh",
+    # The objective function for the NN
+    objective="mse",
+    # The maximum number of epochs to run
+    epochs=2000,
+    # The batch size to use in the NN
+    batch_size=64,
+    # The learning rate used in optimization
+    learning_rate=0.001,
+    # If this many stagnant epochs are seen, stop training
+    stopping_patience=50
+)
+
+# Train MLP model from scratch
+mlp.train(x_train, y_train, x_val, y_val, load_model=False)
+
+# Plot the model
+# mlp.plot_model()
+
+# Predict
+predicted = mlp.predict(x_test)
+
+# Create dataframe for predicted values
+pred_df = pd.DataFrame(np.column_stack([np.squeeze(predicted), y_test]))
+pred_df.columns = ["PRED", "TRUE"]
+
+# Plot predicted values
+pred_df.plot()
+plt.show()
+plt.close()
