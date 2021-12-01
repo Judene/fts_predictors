@@ -18,24 +18,24 @@ pathlib.Path(os.path.join(os.path.dirname(os.getcwd()), "..", "data")).mkdir(par
 data_path = os.path.join(os.path.dirname(os.getcwd()), "..", "data")
 
 # Check if file exists
-if not os.path.exists(os.path.join(data_path, "local_etfs_close.csv")):
+if not os.path.exists(os.path.join(data_path, "usd_zar.csv")):
     raise ValueError("No data in data folder!")
 
-# Get bond data
-bond_etf_data = pd.read_csv(os.path.join(data_path, "local_etfs_close.csv"), index_col=0)
-bond_etf_data = bond_etf_data["GLD"].to_frame().ffill().dropna()
-dates = bond_etf_data
+# Get currency data
+currency_data = pd.read_csv(os.path.join(data_path, "usd_zar.csv"), index_col=0)
+currency_data = currency_data.to_frame().ffill().dropna()
+currency_data = currency_data.fillna(0.0)
+dates = currency_data
 
 n_features = 2
 
-bond_etf_data = series_to_supervised(bond_etf_data, n_in=n_features, n_out=1)
-input_data = bond_etf_data.drop(['var1(t)'], axis=1)
-output_data = bond_etf_data.drop(['var1(t-2)', 'var1(t-1)'], axis=1)
-
+currency_data = series_to_supervised(currency_data, n_in=n_features, n_out=1)
+input_data = currency_data.drop(['var1(t)'], axis=1)
+output_data = currency_data.drop(['var1(t-2)', 'var1(t-1)'], axis=1)
 
 # Create LSTM model
 lstm_model = LSTM(
-    name="lstm_bond_wf",
+    name="lstm_currency_wf",
     num_inputs=n_features,
     num_outputs=1,
     # If true, training info is outputted to stdout
